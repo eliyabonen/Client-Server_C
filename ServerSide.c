@@ -17,13 +17,13 @@ const char* FILE_NAME = "output.txt";
 int sendData(int s, char* buffer);
 int recieveData(int s, char* buffer);
 int getCode(char* str, int length);
+int checkForErrors(int s, char* buffer, int code);
 int getSizeOfFile(FILE* file);
 void getCommandOutput(char* dataBuffer, char* command);
 void getFilesInAFolder(char* dataBuffer, char* path);
-void checkForErrors(int s, char* buffer, int code);
 void cleanBuffer(char* buffer);
 void buildMenu(char* str);
-void closeConnection(int s);
+//void closeConnection(int s);
 
 int main(void)
 {
@@ -87,14 +87,16 @@ int main(void)
 		// Recieving 205
 		cleanBuffer(strRecv);
 		recieveData(new_socket, strRecv);
-		checkForErrors(new_socket, strRecv, 205);
+		if (checkForErrors(new_socket, strRecv, 205))
+			continue;
 
 		printf("Connection Confiremed!\n");
 
 		// Valinading the password(101, 102)
 		cleanBuffer(strRecv);
 		recieveData(new_socket, strRecv);
-		checkForErrors(new_socket, strRecv, 100);
+		if (checkForErrors(new_socket, strRecv, 100))
+			continue;
 
 		if (strcmp(strRecv + 3, PASSWORD) == 0)
 		{
@@ -113,7 +115,7 @@ int main(void)
 			sendData(new_socket, strSend);
 
 			printf("The client has entered the wrong password!\n");
-			closeConnection(new_socket);
+			continue;
 
 			getch();
 			return 1;
@@ -134,7 +136,8 @@ int main(void)
 			// recieving which command to operate
 			cleanBuffer(strRecv);
 			recieveData(new_socket, strRecv);
-			checkForErrors(new_socket, strRecv, 405);
+			if (checkForErrors(new_socket, strRecv, 405))
+				break;
 
 			code = getCode(strRecv, 6); // get the code for multiple checks
 
@@ -194,7 +197,7 @@ void cleanBuffer(char* buffer)
 		buffer[i] = '\0';
 }
 
-void closeConnection(int s)
+/*void closeConnection(int s)
 {
 	int Result = closesocket(s);
 
@@ -205,7 +208,7 @@ void closeConnection(int s)
 	printf("Connection closed successfully\n");
 
 	getch();
-}
+}*/
 
 int getCode(char* str, int length)
 {
@@ -225,7 +228,7 @@ void buildMenu(char* str)
 	strcat(str, "2. Run a command in command prompt\n");
 }
 
-void checkForErrors(int s, char* buffer, int code)
+int checkForErrors(int s, char* buffer, int code)
 {
 	char errorBuffer[100] = { '\0' };
 
@@ -237,9 +240,10 @@ void checkForErrors(int s, char* buffer, int code)
 		strcat(errorBuffer, "There was an error!\n");
 		sendData(s, errorBuffer);
 
-		closeConnection(s);
-		exit(1);
+		return 1;
 	}
+
+	return 0;
 }
 
 void getFilesInAFolder(char* dataBuffer, char* path)
