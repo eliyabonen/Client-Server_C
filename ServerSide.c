@@ -5,19 +5,19 @@
 #include <windows.h>
 #include <dirent.h>
 
-#define SIZE 1024
-#define SERVER_IP "192.168.1.106"
+#define SIZE 4000
 #define PASSWORD "1"
+
+const char* FILE_NAME = "output.txt";
 
 int sendData(int s, char* buffer);
 int recieveData(int s, char* buffer);
 int getCode(char* str, int length);
-void runExecutable(char* dataBuffer, char* path);
-void deleteAFile(char* dataBuffer, char* path);
+int getSizeOfFile(FILE* file);
+void getCommandOutput(char* dataBuffer, char* command);
 void getFilesInAFolder(char* dataBuffer, char* path);
 void checkForErrors(int s, char* buffer, int code);
 void cleanBuffer(char* buffer);
-void addIPAddresses(char* str, char* clientIP);
 void buildMenu(char* str);
 void closeConnection(int s);
 
@@ -134,20 +134,8 @@ int main(void)
 
 			code = getCode(strRecv, 6); // get the code for multiple checks
 
-			// first option, send the ip addresses
+			// first option, list files in folder
 			if (code == 405001)
-			{
-				cleanBuffer(strSend);
-				strcpy(strSend, "500");
-				addIPAddresses(strSend, inet_ntoa(clientService.sin_addr)); // add ip adresses to the send buffer
-
-				sendData(new_socket, strSend);
-
-				printf("The IP addresses sent\n");
-			}
-
-			// second option, open command prompt
-			if (code == 405002)
 			{
 				getFilesInAFolder(dataBuffer, strRecv + 6); // adding the data into the files buffer
 
@@ -160,31 +148,16 @@ int main(void)
 				printf("files list sent, path: %s\n", strRecv + 6);
 			}
 
-			// third option, delete a file
-			if (code == 405003)
+			// second option, open command prompt
+			if (code == 405002)
 			{
-				deleteAFile(dataBuffer, strRecv + 6); // deleting the file with given path
+				getCommandOutput(dataBuffer, strRecv + 6);
 
 				cleanBuffer(strSend);
 				strcpy(strSend, "500");
 				strcat(strSend, dataBuffer);
 
 				sendData(new_socket, strSend);
-
-				printf("delete file request sent, path: %s\n", strRecv + 6);
-			}
-
-			if (code == 405004)
-			{
-				runExecutable(dataBuffer, strRecv + 6); // running an executable file with given path
-
-				cleanBuffer(strSend);
-				strcpy(strSend, "500");
-				strcat(strSend, dataBuffer);
-
-				sendData(new_socket, strSend);
-
-				printf("run file request sent, path: %s\n", strRecv + 6);
 			}
 		}
 	}
@@ -244,20 +217,8 @@ int getCode(char* str, int length)
 void buildMenu(char* str)
 {
 	strcat(str, "0. Quit\n");
-	strcat(str, "1. Get IP of both of us\n");
-	strcat(str, "2. List files in a directory\n");
-	strcat(str, "3. Delete a file\n");
-	strcat(str, "4. Run a file\n");
-}
-
-void addIPAddresses(char* str, char* clientIP)
-{
-	strcat(str, "Server IP: ");
-	strcat(str, SERVER_IP);
-	strcat(str, "\n");
-	strcat(str, "Client IP: ");
-	strcat(str, clientIP);
-	strcat(str, "\n");
+	strcat(str, "1. List files in a directory\n");
+	strcat(str, "2. Run a command in command prompt\n");
 }
 
 void checkForErrors(int s, char* buffer, int code)
@@ -303,34 +264,69 @@ void getFilesInAFolder(char* dataBuffer, char* path)
 	closedir(dir);
 }
 
-void deleteAFile(char* dataBuffer, char* path)
+void getCommandOutput(char* dataBuffer, char* command)
 {
-	char fullCommand[200] = { '\0' };
-	int result;
+	FILE* file;
+	int sizeOfFile, result, ch, i = 0;
+	char* fullCommand;
 
-	strcpy(fullCommand, "del ");
-	strcat(fullCommand, path);
+	// allocating memory for the full command
+	fullCommand = (char*)malloc(sizeof(char) * (strlen(command) + strlen(FILE_NAME) + 4)); // 4 stands for " > " and null
 
+	if (fullCommand == NULL)
+	{
+		strcpy(dataBuffer, "Error at allocating memory\n");
+		printf("Error at allocating memory\n");
+		return;
+	}
+
+	strcpy(fullCommand, command);
+	strcat(fullCommand, " > ");
+	strcat(fullCommand, FILE_NAME);
+
+	printf("Executing the following command: %s\nLoading...\n\n", fullCommand);
+
+	// sending the command to the system to take care of
 	result = system(fullCommand);
 
 	if (result == -1)
-		strcpy(dataBuffer, "Error, file not deleted");
-	else
-		strcpy(dataBuffer, "File deleted successfully");
+	{
+		strcpy(dataBuffer, "Error at the command\n\n");
+		printf("Error at the command\n");
+		return;
+	}
+
+	// I don't need it anymore
+	free(fullCommand);
+
+	// opening the file
+	file = fopen(FILE_NAME, "rt");
+
+	if (file == NULL)
+	{
+		strcpy(dataBuffer, "Error at opening file");
+		printf("Error at opening file\n");
+		return;
+	}
+
+	// writing the data into the output string
+
+	while ((ch = getc(file)) != EOF)
+		dataBuffer[i++] = ch;
+
+	dataBuffer[i] = '\0'; // set a null to the end
+
+	fclose(file);
+	printf("Data of the command was sent\n");
 }
 
-void runExecutable(char* dataBuffer, char* path)
+int getSizeOfFile(FILE* file)
 {
-	char fullCommand[200] = { '\0' };
-	int result;
+	int size;
 
-	strcpy(fullCommand, "start ");
-	strcat(fullCommand, path);
+	fseek(file, 0, SEEK_END);
+	size = ftell(file);
+	fseek(file, 0, SEEK_SET);
 
-	result = system(fullCommand);
-
-	if (result == -1)
-		strcpy(dataBuffer, "Error, file is not running");
-	else
-		strcpy(dataBuffer, "File is running successfully");
+	return size;
 }
