@@ -4,9 +4,9 @@
 #include <winsock2.h>
 #include <windows.h>
 
-#define SIZE 1024
-#define SERVER_IP "192.168.1.106"
-#define MAX_OPTIONS 4 // the zero counts, so it is one more actually
+#define SIZE 4000
+#define SERVER_IP "127.0.0.1"
+#define MAX_OPTIONS 3 // the zero counts, so it is one more actually
 #define MAX_DIGITS_FOR_OPTION 3
 
 int sendData(int s, char* buffer);
@@ -84,7 +84,7 @@ int main(void)
 	printf("Please enter the password: ");
 	gets(szPassword);
 
-		// send the password
+	// send the password
 	cleanBuffer(strSend);
 	strcpy(strSend, "100");
 	strcat(strSend, szPassword);
@@ -93,10 +93,9 @@ int main(void)
 	// recieve the server answer
 	cleanBuffer(strRecv);
 	recieveData(s, strRecv);
-
 	checkForErrors(s, strRecv, 101);
 
-	while (choice != 0) // while the client didn't chose to quit
+	while (choice != 0) // while the client didn't choose to quit
 	{
 		// Recieving the menu
 		cleanBuffer(strRecv);
@@ -120,17 +119,17 @@ int main(void)
 		cleanBuffer(strSend);
 		setFormattedOption(strSend, choice);
 
-		if (choice == 2 || choice == 3 || choice == 4)
+		// adding the content of the command
+		if (choice == 1 || choice == 2)
 		{
 			flushall();
 
-			printf("Enter the path(\\): ");
+			printf("Enter the path(\\) or command: ");
 			gets(path);
 
 			strcat(strSend, path);
 		}
 
-		printf("data send: %s\n", strSend);
 		// Sending the option(405)
 		sendData(s, strSend);
 
