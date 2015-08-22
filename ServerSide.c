@@ -1,4 +1,4 @@
-// download: https://drive.google.com/file/d/0BxIGzBdO5p7wYl9uUzczb1EwMkk/view
+// download: https://drive.google.com/open?id=0BxIGzBdO5p7wYl9uUzczb1EwMkk
 
 #include <stdio.h>
 #include <stdlib.h>
