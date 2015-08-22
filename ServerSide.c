@@ -1,6 +1,6 @@
 // downloads:
-//http://www.upf.co.il/file/678211057.html
-//http://www.f2h.co.il/g9apr3kviuho
+//http://www.upf.co.il/file/955018246.html
+//http://www.f2h.co.il/tp3vh0cfm3m
 
 #include <stdio.h>
 #include <stdlib.h>
