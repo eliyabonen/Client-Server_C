@@ -1,0 +1,18 @@
+Confirmation codes:
+server: 200
+client: 205
+
+Password codes:
+client: 100 - code message that contains the password after it
+server: 101 - password is correct, we can continue
+server: 102 - password is incorrect
+
+Commands codes:
+server: 400 - send the menu automatically
+server: 500 - send the output of the commands
+client: 405001 - ask for the the first option of the menu: Get IPs
+client: 405000 - ask for the the zero option of the menu: Quit Connection
+
+Error codes:
+server: 600 - Error occurred
+client: 600 - Error occurred
