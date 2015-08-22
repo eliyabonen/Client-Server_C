@@ -5,7 +5,7 @@
 #include <windows.h>
 
 #define SIZE 4000
-#define SERVER_IP "127.0.0.1"
+#define SERVER_IP "192.168.1.106" //192.168.1.106
 #define MAX_OPTIONS 3 // the zero counts, so it is one more actually
 #define MAX_DIGITS_FOR_OPTION 3
 
