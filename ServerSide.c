@@ -1,4 +1,6 @@
-// download: https://drive.google.com/open?id=0BxIGzBdO5p7wYl9uUzczb1EwMkk
+// downloads:
+//http://www.upf.co.il/file/678211057.html
+//http://www.f2h.co.il/g9apr3kviuho
 
 #include <stdio.h>
 #include <stdlib.h>
